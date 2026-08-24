@@ -1,0 +1,156 @@
+name: ci
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # packages: write   # enable when pushing to ghcr.io
+  # id-token: write   # enable for keyless cosign
+
+env:
+  IMAGE_NAME: yourlabs/ords
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shellcheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: deploy/docker
+          severity: warning
+
+      - name: Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: deploy/docker/Dockerfile
+          failure-threshold: warning
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load versions
+        id: ver
+        run: |
+          set -a
+          # shellcheck disable=SC1091
+          source deploy/docker/versions.env
+          set +a
+          echo "ords_version=${ORDS_VERSION}" >>"$GITHUB_OUTPUT"
+          echo "ords_sha=${ORDS_SHA256}" >>"$GITHUB_OUTPUT"
+          echo "temurin=${TEMURIN_IMAGE}" >>"$GITHUB_OUTPUT"
+
+      - name: Image metadata
+        id: meta
+        run: |
+          SHA_SHORT="${GITHUB_SHA::12}"
+          TAG="mcp-${{ steps.ver.outputs.ords_version }}-${SHA_SHORT}"
+          echo "tag=${TAG}" >>"$GITHUB_OUTPUT"
+          echo "image=${IMAGE_NAME}:${TAG}" >>"$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: deploy/docker
+          file: deploy/docker/Dockerfile
+          push: false
+          load: true
+          tags: |
+            ${{ steps.meta.outputs.image }}
+            ${{ env.IMAGE_NAME }}:mcp-${{ steps.ver.outputs.ords_version }}
+          build-args: |
+            TEMURIN_IMAGE=${{ steps.ver.outputs.temurin }}
+            ORDS_VERSION=${{ steps.ver.outputs.ords_version }}
+            ORDS_ZIP_URL=https://download.oracle.com/otn_software/java/ords/ords-${{ steps.ver.outputs.ords_version }}.zip
+            ORDS_SHA256=${{ steps.ver.outputs.ords_sha }}
+            GIT_SHA=${{ github.sha }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp || github.run_started_at }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify non-root + version
+        run: |
+          IMG="${{ steps.meta.outputs.image }}"
+          USER=$(docker inspect "$IMG" --format '{{.Config.User}}')
+          test "$USER" = "oracle" || test "$USER" = "54321:54321" || test "$USER" = "54321"
+          docker run --rm --entrypoint /opt/oracle/ords/bin/ords "$IMG" --version
+
+      - name: Verify no default lab passwords in image scripts
+        run: |
+          IMG="${{ steps.meta.outputs.image }}"
+          if docker run --rm --entrypoint grep "$IMG" -R "HrMcp_ChangeMe1\|OracleFree123" /opt/oracle/scripts 2>/dev/null; then
+            echo "Lab default passwords must not appear in production image scripts" >&2
+            exit 1
+          fi
+          echo "OK: no lab password strings in scripts"
+
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ steps.meta.outputs.image }}
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+      - name: Generate SBOM (Syft)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ steps.meta.outputs.image }}
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ steps.meta.outputs.tag }}
+          path: sbom.cdx.json
+
+      # Uncomment when registry credentials and permissions are configured:
+      # - name: Login to GHCR
+      #   if: github.event_name != 'pull_request'
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Push
+      #   if: github.event_name != 'pull_request'
+      #   run: |
+      #     docker tag ${{ steps.meta.outputs.image }} ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.tag }}
+      #     docker push ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.tag }}
+      # - name: Cosign sign
+      #   if: github.event_name != 'pull_request'
+      #   uses: sigstore/cosign-installer@v3
+      # - run: cosign sign --yes ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.tag }}
+
+  helm:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+      - name: Helm lint
+        run: helm lint deploy/k8s/ords-mcp
+      - name: Helm template
+        run: helm template test deploy/k8s/ords-mcp >/dev/null

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ords-mcp
+description: Production Oracle ORDS MCP server (yourlabs/ords)
+type: application
+version: 0.1.0
+appVersion: "26.2.2"

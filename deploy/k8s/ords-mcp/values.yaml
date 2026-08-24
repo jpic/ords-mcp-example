@@ -1,0 +1,116 @@
+# Default values — override per environment. Pin image digest in prod.
+
+image:
+  repository: yourlabs/ords
+  # Prefer digest in production: repository@sha256:...
+  tag: mcp-26.2.2.204.1619
+  pullPolicy: IfNotPresent
+  # digest: sha256:replace-me
+
+replicaCount: 2
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 54321
+  runAsGroup: 54321
+  fsGroup: 54321
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: ords-mcp.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  # - secretName: ords-mcp-tls
+  #   hosts: [ords-mcp.example.com]
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+# JWT / MCP (non-secret)
+config:
+  jwtIssuer: "https://login.example.com/"
+  jwtAudience: "https://ords-mcp.example.com/mcp"
+  jwtJwksUrl: "https://login.example.com/.well-known/jwks.json"
+  jwtAuthServerUrl: "https://login.example.com"
+  jwtRoleClaim: "/roles2"
+  mcpScope: "urn:oracle:dbtools:ords:mcpserver:all"
+  httpPort: "8080"
+  httpHost: "0.0.0.0"
+  enableHttps: "false"
+  # After first init, leave false so pods don't rewrite secrets every start
+  reconfigure: "false"
+  autoInit: "false"
+
+# Pool env files (content without passwords). Keys only — mount secrets separately.
+# Each item becomes a file in /etc/ords/pools.d/
+pools: []
+# - filename: mcp-fin.env
+#   content: |
+#     NAME=mcp-fin
+#     HOST=fin-db
+#     PORT=1521
+#     SERVICE=FINPDB
+#     USERNAME=FIN_MCP_RO
+#     ROLE=POOL.FIN
+#     PASSWORD_FILE=/var/run/secrets/ords-pools/fin-password
+
+# Existing secret with password files (keys = filenames under mount)
+poolPasswordSecret: ""
+# poolPasswordSecret: ords-mcp-pool-passwords
+
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: ""
+  # accessModes: [ReadWriteOnce]  # use RWX if multi-replica shares config
+  accessModes:
+    - ReadWriteOnce
+
+# For multi-replica without shared PVC: use emptyDir + init every start (reconfigure true)
+configVolume:
+  # pvc | emptyDir
+  type: pvc
+
+networkPolicy:
+  enabled: true
+  # Additional egress CIDRs/hosts for DB listeners (simplified as ipBlock)
+  dbEgress: []
+  # - cidr: 10.0.0.0/8
+  idpEgress: true
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

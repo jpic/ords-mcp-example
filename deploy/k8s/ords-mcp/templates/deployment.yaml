@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ords-mcp.fullname" . }}
+  labels:
+    {{- include "ords-mcp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ords-mcp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "ords-mcp.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "ords-mcp.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: init-config
+          {{- if .Values.image.digest }}
+          image: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
+          {{- else }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/opt/oracle/scripts/entrypoint.sh", "init"]
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "ords-mcp.fullname" . }}-config
+          volumeMounts:
+            - name: ords-config
+              mountPath: /etc/ords/config
+            - name: pools
+              mountPath: /etc/ords/pools.d
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+            {{- if .Values.poolPasswordSecret }}
+            - name: pool-passwords
+              mountPath: /var/run/secrets/ords-pools
+              readOnly: true
+            {{- end }}
+      containers:
+        - name: ords
+          {{- if .Values.image.digest }}
+          image: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
+          {{- else }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["serve"]
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "ords-mcp.fullname" . }}-config
+          ports:
+            - name: http
+              containerPort: {{ .Values.config.httpPort | int }}
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                - /opt/oracle/scripts/entrypoint.sh
+                - check
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: ords-config
+              mountPath: /etc/ords/config
+            - name: tmp
+              mountPath: /tmp
+            - name: pools
+              mountPath: /etc/ords/pools.d
+              readOnly: true
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: pools
+          configMap:
+            name: {{ include "ords-mcp.fullname" . }}-pools
+        - name: ords-config
+          {{- if eq .Values.configVolume.type "emptyDir" }}
+          emptyDir: {}
+          {{- else }}
+          persistentVolumeClaim:
+            claimName: {{ include "ords-mcp.fullname" . }}-config
+          {{- end }}
+        {{- if .Values.poolPasswordSecret }}
+        - name: pool-passwords
+          secret:
+            secretName: {{ .Values.poolPasswordSecret }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

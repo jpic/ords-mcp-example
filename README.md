@@ -67,6 +67,8 @@ Details: [docs/OPENCODE.md](docs/OPENCODE.md).
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Security model, token claims, pools |
 | [docs/WORK_REPRODUCTION.md](docs/WORK_REPRODUCTION.md) | Port to K8s / corporate IdP |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Error → fix map (from real failures) |
+| [docs/PRODUCTION.md](docs/PRODUCTION.md) | **Build & run production `yourlabs/ords`** |
+| [docs/PRODUCTION_IMAGE_PLAN.md](docs/PRODUCTION_IMAGE_PLAN.md) | Full production roadmap / audit design |
 
 ## Pools (Oracle Free `FREEPDB1`)
 
@@ -75,18 +77,33 @@ Details: [docs/OPENCODE.md](docs/OPENCODE.md).
 | `mcp-hr` | `POOL.HR` | `HR_MCP_RO` | `SELECT * FROM employees` |
 | `mcp-fin` | `POOL.FIN` | `FIN_MCP_RO` | `SELECT * FROM invoices` |
 
+## Production image
+
+```bash
+./deploy/docker/build.sh
+# → yourlabs/ords:mcp-26.2.2.204.1619-<gitsha>
+```
+
+- Pinned Temurin digest + ORDS zip **SHA256**
+- Fail-closed init (no default DB passwords)
+- CI: lint, Trivy, SBOM (`.github/workflows/ci.yml`)
+- Helm chart: `deploy/k8s/ords-mcp`
+
+See **[docs/PRODUCTION.md](docs/PRODUCTION.md)**.
+
 ## Layout
 
 ```text
-docker-compose.yml       oracle + ords
-Dockerfile               ORDS image (latest zip)
-entrypoint.sh            wait DB → configure-mcp → serve
-scripts/configure-mcp.sh Auth0 JWT profile + MCP pools
-scripts/test_auth0.py    Auth0 + ORDS smoke test
-scripts/mcp-curl-smoke.sh  MCP calls with a pasted bearer token
-sql/01_lab_schemas.sql   HR/FIN schemas + MCP users (first DB boot)
-opencode.json.example    OpenCode remote MCP + OAuth
-docs/                    Runbooks
+docker-compose.yml              Lab: Oracle Free + ORDS
+Dockerfile                      Lab image (pinned ORDS; AUTO_INIT)
+deploy/docker/                  Production Dockerfile, build.sh, init/serve
+deploy/k8s/ords-mcp/            Helm chart
+deploy/pools/                   Pool *.env examples
+scripts/test_auth0.py           Auth0 + ORDS smoke test
+scripts/mcp-curl-smoke.sh       MCP calls with bearer token
+sql/01_lab_schemas.sql          HR/FIN + MCP users (first DB boot)
+opencode.json.example           OpenCode remote MCP + OAuth
+docs/                           Runbooks + production plan
 ```
 
 ## Hard requirements (do not skip)

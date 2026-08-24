@@ -3,3 +3,5 @@
 ords-config/
 oracle-data/
 opencode.json
+deploy/pools/smoke-secrets/
+deploy/docker/.last-image

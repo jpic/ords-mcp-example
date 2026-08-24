@@ -1,0 +1,57 @@
+# Example overlay for local/lab-style deploy (not production).
+# Replace JWT URLs with your IdP. Do not commit real secrets.
+#
+# kubectl create secret generic ords-mcp-pool-passwords \
+#   --from-literal=hr-password='YOUR_LAB_HR_PASSWORD' \
+#   --from-literal=fin-password='YOUR_LAB_FIN_PASSWORD'
+#
+# helm upgrade --install ords-mcp ./deploy/k8s/ords-mcp -f values-lab.yaml
+
+replicaCount: 1
+
+image:
+  repository: yourlabs/ords
+  tag: mcp-26.2.2.204.1619
+  pullPolicy: IfNotPresent
+
+config:
+  jwtIssuer: "https://YOUR_TENANT.region.auth0.com/"
+  jwtAudience: "http://127.0.0.1:8080/mcp"
+  jwtJwksUrl: "https://YOUR_TENANT.region.auth0.com/.well-known/jwks.json"
+  jwtAuthServerUrl: "https://YOUR_TENANT.region.auth0.com"
+  jwtRoleClaim: "/roles2"
+  reconfigure: "true"
+  autoInit: "false"
+
+configVolume:
+  type: emptyDir
+
+persistence:
+  enabled: false
+
+networkPolicy:
+  enabled: false
+
+pools:
+  - filename: mcp-hr.env
+    content: |
+      NAME=mcp-hr
+      DESCRIPTION=Lab HR
+      HOST=oracle
+      PORT=1521
+      SERVICE=FREEPDB1
+      USERNAME=HR_MCP_RO
+      ROLE=POOL.HR
+      PASSWORD_FILE=/var/run/secrets/ords-pools/hr-password
+  - filename: mcp-fin.env
+    content: |
+      NAME=mcp-fin
+      DESCRIPTION=Lab FIN
+      HOST=oracle
+      PORT=1521
+      SERVICE=FREEPDB1
+      USERNAME=FIN_MCP_RO
+      ROLE=POOL.FIN
+      PASSWORD_FILE=/var/run/secrets/ords-pools/fin-password
+
+poolPasswordSecret: ords-mcp-pool-passwords

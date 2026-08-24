@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ords-mcp.fullname" . }}-config
+  labels:
+    {{- include "ords-mcp.labels" . | nindent 4 }}
+data:
+  ORDS_JWT_ISSUER: {{ .Values.config.jwtIssuer | quote }}
+  ORDS_JWT_AUDIENCE: {{ .Values.config.jwtAudience | quote }}
+  ORDS_JWT_JWKS_URL: {{ .Values.config.jwtJwksUrl | quote }}
+  ORDS_JWT_AUTH_SERVER_URL: {{ .Values.config.jwtAuthServerUrl | quote }}
+  ORDS_JWT_ROLE_CLAIM: {{ .Values.config.jwtRoleClaim | quote }}
+  ORDS_MCP_SCOPE: {{ .Values.config.mcpScope | quote }}
+  ORDS_HTTP_PORT: {{ .Values.config.httpPort | quote }}
+  ORDS_HTTP_HOST: {{ .Values.config.httpHost | quote }}
+  ORDS_ENABLE_HTTPS: {{ .Values.config.enableHttps | quote }}
+  ORDS_RECONFIGURE: {{ .Values.config.reconfigure | quote }}
+  ORDS_AUTO_INIT: {{ .Values.config.autoInit | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ords-mcp.fullname" . }}-pools
+  labels:
+    {{- include "ords-mcp.labels" . | nindent 4 }}
+data:
+{{- range .Values.pools }}
+  {{ .filename }}: |
+{{ .content | indent 4 }}
+{{- else }}
+  # placeholder so empty pools still create the ConfigMap
+  .gitkeep: |
+    # add pools via values.pools
+{{- end }}
