@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "ords-mcp": {
+      "type": "remote",
+      "url": "http://127.0.0.1:8080/mcp",
+      "enabled": true,
+      "timeout": 120000,
+      "oauth": {
+        "clientId": "{env:AUTH0_CLIENT_ID}",
+        "scope": "urn:oracle:dbtools:ords:mcpserver:all offline_access"
+      }
+    }
+  }
+}

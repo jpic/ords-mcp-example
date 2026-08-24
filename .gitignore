@@ -1,0 +1,5 @@
+.env
+*.log
+ords-config/
+oracle-data/
+opencode.json
