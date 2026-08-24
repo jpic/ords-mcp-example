@@ -26,7 +26,7 @@ Complete these steps **in order**. This matches a **working** lab with OpenCode 
 
 1. Open [https://manage.auth0.com/](https://manage.auth0.com/)
 2. Create or select a tenant.
-3. Note **Domain** (top-left tenant menu), e.g. `dev-kyzj8tnh73odlyxr.us.auth0.com`  
+3. Note **Domain** (top-left tenant menu), e.g. `dev-xxxx.us.auth0.com`  
    → **`AUTH0_DOMAIN`**
 
 ---

@@ -102,3 +102,7 @@ docs/                    Runbooks
 - [ORDS as streaming HTTP MCP server (Jeff Smith)](https://www.thatjeffsmith.com/archive/2026/07/ords-now-a-streaming-http-mcp-server-for-oracle-database/)
 - [ORDS 26.2 MCP docs](https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/26.2/orddg/using-ords-model-context-protocol-mcp.html)
 - [OpenCode MCP servers](https://opencode.ai/docs/mcp-servers/)
+
+## License
+
+MIT. See [LICENSE](LICENSE). Oracle Database / ORDS remain Oracle products; this repo does not redistribute their binaries.
