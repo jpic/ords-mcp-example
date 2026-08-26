@@ -59,8 +59,21 @@ Init container runs `init`; main container runs `serve` only.
 | AUTO_INIT | Yes via compose | No (initContainer) |
 | netcat | Yes (wait-for-db optional) | No |
 
-## Upgrade ORDS
+## Bundled client tools
 
-1. Download new zip; compute SHA256  
-2. Update `deploy/docker/versions.env`  
+The production image also ships CLI clients (non-root `oracle` user, on `PATH`):
+
+| Tool | Binary | Source |
+|------|--------|--------|
+| SQL*Plus | `sqlplus` | Instant Client Basic Light + SQL*Plus (`IC_*` in `versions.env`) |
+| SQLcl | `sql` and `sqlcl` | SQLcl zip (`SQLCL_*`) |
+| Python | `python3` | Ubuntu `python3` + pip |
+| python-oracledb | `import oracledb` | PyPI pin `ORACLEDB_VERSION` (thin mode; Instant Client available for thick) |
+
+`sqlplus` needs Instant Client libs (`LD_LIBRARY_PATH=/opt/oracle/instantclient`). SQLcl uses the image JRE. python-oracledb defaults to thin mode and does not require Instant Client.
+
+## Upgrade ORDS / clients
+
+1. Download new zip(s); compute SHA256  
+2. Update `deploy/docker/versions.env` (`ORDS_*`, and/or `IC_*`, `SQLCL_*`, `ORACLEDB_VERSION`)  
 3. PR → CI → staging → prod digest  

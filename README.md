@@ -84,7 +84,8 @@ Details: [docs/OPENCODE.md](docs/OPENCODE.md).
 # → yourlabs/ords:mcp-26.2.2.204.1619-<gitsha>
 ```
 
-- Pinned Temurin digest + ORDS zip **SHA256**
+- Pinned Temurin digest + ORDS / Instant Client / SQLcl zip **SHA256**
+- Client tools: `sqlplus`, SQLcl (`sql` / `sqlcl`), `python3` + `oracledb`
 - Fail-closed init (no default DB passwords)
 - CI: lint, Trivy, SBOM (`.github/workflows/ci.yml`)
 - Helm chart: `deploy/k8s/ords-mcp`

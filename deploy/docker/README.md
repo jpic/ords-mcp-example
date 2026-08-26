@@ -7,7 +7,9 @@
 # → yourlabs/ords:mcp-26.2.2.204.1619-<gitsha>
 ```
 
-Pinned inputs: `versions.env` (Temurin digest, ORDS version + SHA256).
+Pinned inputs: `versions.env` (Temurin digest, ORDS / Instant Client / SQLcl SHA256, python-oracledb version).
+
+Also on `PATH` in the image: `sqlplus` (Instant Client), `sql` / `sqlcl` (SQLcl), `python3` with the `oracledb` driver.
 
 ## Run modes
 

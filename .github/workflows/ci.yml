@@ -55,6 +55,16 @@ jobs:
           echo "ords_version=${ORDS_VERSION}" >>"$GITHUB_OUTPUT"
           echo "ords_sha=${ORDS_SHA256}" >>"$GITHUB_OUTPUT"
           echo "temurin=${TEMURIN_IMAGE}" >>"$GITHUB_OUTPUT"
+          echo "ic_version=${IC_VERSION}" >>"$GITHUB_OUTPUT"
+          echo "ic_dir=${IC_DIR}" >>"$GITHUB_OUTPUT"
+          echo "ic_basiclite_url=${IC_BASICLITE_URL}" >>"$GITHUB_OUTPUT"
+          echo "ic_basiclite_sha=${IC_BASICLITE_SHA256}" >>"$GITHUB_OUTPUT"
+          echo "ic_sqlplus_url=${IC_SQLPLUS_URL}" >>"$GITHUB_OUTPUT"
+          echo "ic_sqlplus_sha=${IC_SQLPLUS_SHA256}" >>"$GITHUB_OUTPUT"
+          echo "sqlcl_version=${SQLCL_VERSION}" >>"$GITHUB_OUTPUT"
+          echo "sqlcl_url=${SQLCL_URL}" >>"$GITHUB_OUTPUT"
+          echo "sqlcl_sha=${SQLCL_SHA256}" >>"$GITHUB_OUTPUT"
+          echo "oracledb_version=${ORACLEDB_VERSION}" >>"$GITHUB_OUTPUT"
 
       - name: Image metadata
         id: meta
@@ -82,17 +92,31 @@ jobs:
             ORDS_VERSION=${{ steps.ver.outputs.ords_version }}
             ORDS_ZIP_URL=https://download.oracle.com/otn_software/java/ords/ords-${{ steps.ver.outputs.ords_version }}.zip
             ORDS_SHA256=${{ steps.ver.outputs.ords_sha }}
+            IC_VERSION=${{ steps.ver.outputs.ic_version }}
+            IC_DIR=${{ steps.ver.outputs.ic_dir }}
+            IC_BASICLITE_URL=${{ steps.ver.outputs.ic_basiclite_url }}
+            IC_BASICLITE_SHA256=${{ steps.ver.outputs.ic_basiclite_sha }}
+            IC_SQLPLUS_URL=${{ steps.ver.outputs.ic_sqlplus_url }}
+            IC_SQLPLUS_SHA256=${{ steps.ver.outputs.ic_sqlplus_sha }}
+            SQLCL_VERSION=${{ steps.ver.outputs.sqlcl_version }}
+            SQLCL_URL=${{ steps.ver.outputs.sqlcl_url }}
+            SQLCL_SHA256=${{ steps.ver.outputs.sqlcl_sha }}
+            ORACLEDB_VERSION=${{ steps.ver.outputs.oracledb_version }}
             GIT_SHA=${{ github.sha }}
             BUILD_DATE=${{ github.event.head_commit.timestamp || github.run_started_at }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Verify non-root + version
+      - name: Verify non-root + version + client tools
         run: |
           IMG="${{ steps.meta.outputs.image }}"
           USER=$(docker inspect "$IMG" --format '{{.Config.User}}')
           test "$USER" = "oracle" || test "$USER" = "54321:54321" || test "$USER" = "54321"
           docker run --rm --entrypoint /opt/oracle/ords/bin/ords "$IMG" --version
+          docker run --rm --entrypoint sqlplus "$IMG" -V
+          docker run --rm --entrypoint sql "$IMG" -V
+          docker run --rm --entrypoint sqlcl "$IMG" -V
+          docker run --rm --entrypoint python3 "$IMG" -c "import oracledb; print(oracledb.__version__)"
 
       - name: Verify no default lab passwords in image scripts
         run: |
