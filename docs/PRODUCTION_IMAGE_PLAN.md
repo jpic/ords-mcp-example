@@ -358,7 +358,7 @@ container:     ords-mcp serve  # no reconfigure
 | Ingress terminates TLS | Default; ORDS HTTP in-cluster |
 | ORDS HTTPS | If policy requires TLS to pod |
 
-Audience / API Identifier / MCP public URL must stay **identical** (OpenCode `resource=`).
+Audience / API Identifier / MCP public URL must stay **identical** (OpenCode `resource=`). Prefer a dedicated host; MCP is not under `/ords` — [REVERSE_PROXY.md](./REVERSE_PROXY.md).
 
 ### 5.5 Secrets
 

@@ -131,3 +131,4 @@ PY
 - Day-to-day OpenCode: [OPENCODE.md](./OPENCODE.md)  
 - Errors: [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)  
 - Work/K8s: [WORK_REPRODUCTION.md](./WORK_REPRODUCTION.md)  
+- Reverse proxy / public URL: [REVERSE_PROXY.md](./REVERSE_PROXY.md)  

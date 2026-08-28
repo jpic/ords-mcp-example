@@ -148,7 +148,7 @@ Callback port **19876** must be free (only one `opencode mcp auth` at a time).
 |-----|------|
 | One Oracle Free, two schemas as “databases” | One MCP pool per real DB/service |
 | Auth0 free tenant | Entra / Okta / Auth0 Enterprise (same JWT shape) |
-| HTTP `127.0.0.1:8080` | HTTPS public MCP URL = API Identifier = `aud` |
+| HTTP `127.0.0.1:8080` | HTTPS public MCP URL = API Identifier = `aud` (dedicated host `/mcp`; see [REVERSE_PROXY.md](./REVERSE_PROXY.md)) |
 | Docker Compose | Kubernetes + secrets |
 
 See [WORK_REPRODUCTION.md](./WORK_REPRODUCTION.md).

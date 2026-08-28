@@ -35,7 +35,7 @@ cp opencode.json.example opencode.json   # if needed
 
 | Field | Why |
 |-------|-----|
-| `url` | Must match Auth0 API Identifier and ORDS `resource` |
+| `url` | Public MCP URL; must match Auth0 API Identifier and ORDS audience (`resource=`). Behind a proxy: [REVERSE_PROXY.md](./REVERSE_PROXY.md) |
 | `clientId` | Native app Client ID from `.env` |
 | **No** `clientSecret` | Native + PKCE (`token_endpoint_auth_method=none`) |
 | `scope` | MCP permission + refresh; avoid extra scopes unless needed |

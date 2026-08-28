@@ -35,6 +35,8 @@ Complete these steps **in order**. This matches a **working** lab with OpenCode 
 
 OpenCode sends `resource=http://127.0.0.1:8080/mcp`. Auth0 only accepts that if an API exists with that **Identifier**.
 
+At work the Identifier is the **public** MCP URL (same string as OpenCode `url` and ORDS audience). MCP is `/mcp` on the host, not under `/ords` — [REVERSE_PROXY.md](./REVERSE_PROXY.md).
+
 1. Left menu: **Applications → APIs** (top-level **APIs**, not inside an Application).
 2. **+ Create API**
 

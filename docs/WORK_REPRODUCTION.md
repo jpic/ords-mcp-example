@@ -18,13 +18,15 @@ Port the **same security model** from Docker + Auth0 + OpenCode to Kubernetes an
 
 | Lab | Work |
 |-----|------|
-| API Identifier / MCP URL `http://127.0.0.1:8080/mcp` | Public HTTPS URL, e.g. `https://ords-mcp.company.com/mcp` |
+| API Identifier / MCP URL `http://127.0.0.1:8080/mcp` | Public HTTPS URL, e.g. `https://ords-mcp.company.com/mcp` (dedicated host; do **not** strip `/ords` — see [REVERSE_PROXY.md](./REVERSE_PROXY.md)) |
 | Auth0 free tenant | Entra ID / Okta / Auth0 Enterprise |
 | One Oracle Free, two schemas | N databases; one MCP pool each |
 | Docker Compose | Deployment + Ingress + Secrets + NetworkPolicy |
 | Sample passwords in `.env` | Vault / External Secrets |
 
 **Rule:** Auth0/Entra **API Identifier (audience)** = **exact MCP URL** the client uses (including scheme and path), because clients send OAuth `resource=` equal to that URL.
+
+MCP is at `/mcp` on the ORDS host, **not** under `/ords`. ORDS has no path-prefix setting. Prefer `https://ords-mcp.company.com/mcp`. Mapping `https://my-proxy/ords/` → `http://ords` makes ORDS advertise `https://my-proxy/mcp`. Details: [REVERSE_PROXY.md](./REVERSE_PROXY.md).
 
 ## Suggested work rollout
 
@@ -93,4 +95,5 @@ db.password (wallet / secret)
 - [ARCHITECTURE.md](./ARCHITECTURE.md)  
 - [AUTH0_SETUP.md](./AUTH0_SETUP.md)  
 - [OPENCODE.md](./OPENCODE.md)  
+- [REVERSE_PROXY.md](./REVERSE_PROXY.md)  
 - [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)  

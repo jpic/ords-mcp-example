@@ -38,7 +38,7 @@ docker images 'yourlabs/ords*'
 
 1. Build & push image to your registry (tag + digest).  
 2. Create secret with pool password files.  
-3. Fill `values.yaml` JWT audience = **public MCP URL**.  
+3. Fill `values.yaml` JWT audience = **public MCP URL** (same string OpenCode uses; dedicated host `/mcp` — [REVERSE_PROXY.md](./REVERSE_PROXY.md)).  
 4. `helm upgrade --install ords-mcp ./deploy/k8s/ords-mcp -f values-prod.yaml`.  
 
 Init container runs `init`; main container runs `serve` only.

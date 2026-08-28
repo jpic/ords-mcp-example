@@ -66,6 +66,7 @@ Details: [docs/OPENCODE.md](docs/OPENCODE.md).
 | [docs/LAB_WALKTHROUGH.md](docs/LAB_WALKTHROUGH.md) | Full runbook from zero to working MCP |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Security model, token claims, pools |
 | [docs/WORK_REPRODUCTION.md](docs/WORK_REPRODUCTION.md) | Port to K8s / corporate IdP |
+| [docs/REVERSE_PROXY.md](docs/REVERSE_PROXY.md) | Public URL, audience, path prefix vs dedicated host |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Error → fix map (from real failures) |
 | [docs/PRODUCTION.md](docs/PRODUCTION.md) | **Build & run production `yourlabs/ords`** |
 | [docs/PRODUCTION_IMAGE_PLAN.md](docs/PRODUCTION_IMAGE_PLAN.md) | Full production roadmap / audit design |

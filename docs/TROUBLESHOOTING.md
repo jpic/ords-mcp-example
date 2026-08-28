@@ -69,6 +69,16 @@ Switching M2M → Native disables Client Credentials on that app — expected fo
 
 ---
 
+### ORDS advertises `https://my-proxy/mcp` but clients use `https://my-proxy/ords/mcp`
+
+**Cause:** Reverse proxy maps `https://my-proxy/ords/` → `http://ords` (strips `/ords`). MCP is a host-root `/mcp` endpoint, not under `standalone.context.path`. ORDS reconstructs the resource from Host + `/mcp`. There is no public-prefix setting; audience does not rewrite advertised URLs.
+
+**Fix:** Serve MCP on a dedicated host (`https://ords-mcp.company.com/mcp`) without stripping a prefix. Point OpenCode `url`, IdP API identifier, and `mcp.security.jwt.profile.audience` at that URL.
+
+See [REVERSE_PROXY.md](./REVERSE_PROXY.md).
+
+---
+
 ### Service not found: http://127.0.0.1:8080/mcp
 
 **Cause:** Auth0 has no API whose **Identifier** equals that string.  
@@ -263,3 +273,4 @@ docker compose up -d ords
 - [AUTH0_SETUP.md](./AUTH0_SETUP.md)  
 - [OPENCODE.md](./OPENCODE.md)  
 - [ARCHITECTURE.md](./ARCHITECTURE.md)  
+- [REVERSE_PROXY.md](./REVERSE_PROXY.md)  
